@@ -6,6 +6,7 @@ typedef AppRoute AppRouteCreator(Map<String, String> parameters);
 
 final routeCreatorByName = <String, AppRouteCreator>{
   '/': FirstRoute.creator,
+  'second': SecondRoute.creator,
 };
 
 abstract class AppRoute {
