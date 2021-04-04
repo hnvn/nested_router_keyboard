@@ -51,39 +51,41 @@ class SecondView extends StatefulWidget {
 }
 
 class _SecondViewState extends State<SecondView> {
-  final _nestedRoutes = <AppRoute>[];
+  final _homeKey = GlobalKey();
+  final _calendarKey = GlobalKey();
 
   int _currentIndex;
-  Widget _rootView;
+  NestedRouterDelegate _routerDelegate;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = 0;
-    _rootView = HomeView();
+    _routerDelegate = NestedRouterDelegate(
+      root: HomeView(
+        key: _homeKey,
+      ),
+      builder: (navigator) {
+        return Scaffold(
+          appBar: AppBar(),
+          body: SizedBox.expand(
+            child: Row(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                _navigationRail(),
+                Expanded(child: navigator),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Router(
-      routerDelegate: NestedRouterDelegate(
-        root: _rootView,
-        builder: (navigator) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: SizedBox.expand(
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  _navigationRail(),
-                  Expanded(child: navigator),
-                ],
-              ),
-            ),
-          );
-        },
-        initialRoutes: _nestedRoutes,
-      ),
+      routerDelegate: _routerDelegate,
     );
   }
 
@@ -122,16 +124,22 @@ class _SecondViewState extends State<SecondView> {
   }
 
   _onNavigationChanged(int index) {
+    Widget root;
     switch (index) {
       case 0:
-        _rootView = HomeView();
+        root = HomeView(
+          key: _homeKey,
+        );
         break;
       case 1:
-        _rootView = CalendarView();
+        root = CalendarView(
+          key: _calendarKey,
+        );
         break;
       default:
-        _rootView = Container();
+        root = Container();
     }
+    _routerDelegate.reload(root);
     setState(() {
       _currentIndex = index;
     });
@@ -139,6 +147,8 @@ class _SecondViewState extends State<SecondView> {
 }
 
 class HomeView extends StatefulWidget {
+  HomeView({Key key}) : super(key: key);
+
   @override
   _HomeViewState createState() => _HomeViewState();
 }
@@ -165,9 +175,6 @@ class _HomeViewState extends State<HomeView> {
               child: TextField(
                   decoration: InputDecoration(border: OutlineInputBorder())),
             ),
-            SizedBox(
-              height: 8.0,
-            )
           ],
         ),
       ),
@@ -176,6 +183,8 @@ class _HomeViewState extends State<HomeView> {
 }
 
 class CalendarView extends StatefulWidget {
+  CalendarView({Key key}) : super(key: key);
+
   @override
   _CalendarViewtate createState() => _CalendarViewtate();
 }

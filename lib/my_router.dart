@@ -89,44 +89,6 @@ abstract class MyRouterDelegate extends RouterDelegate<List<AppRoute>>
   }
 }
 
-class TestRouterDelegate extends MyRouterDelegate {
-  final Widget _home;
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-
-  TestRouterDelegate(Widget home)
-      : _home = home,
-        super(<AppRoute>[]);
-
-  @override
-  Widget build(BuildContext context) {
-    return Navigator(
-      key: _navigatorKey,
-      onPopPage: _onPopPage,
-      pages: [
-        MyPage(
-          routeFactory: (settings) => MaterialPageRoute(
-            settings: settings,
-            builder: (_) => _home,
-          ),
-        )
-      ],
-    );
-  }
-
-  @override
-  GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
-
-  bool _onPopPage(Route<dynamic> route, dynamic result) {
-    if (_stack.isNotEmpty) {
-      if (_stack.last.name == route.settings.name) {
-        _stack.removeLast();
-        notifyListeners();
-      }
-    }
-    return route.didPop(result);
-  }
-}
-
 class RootRouterDelegate extends MyRouterDelegate {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
@@ -168,17 +130,18 @@ class RootRouterDelegate extends MyRouterDelegate {
 typedef Widget NestedRouterBuilder(Navigator navigator);
 
 class NestedRouterDelegate extends MyRouterDelegate {
-  final Widget root;
   final NestedRouterBuilder builder;
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   final Function(dynamic result) onFinish;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
-  NestedRouterDelegate(
-      {@required this.root,
-      @required this.builder,
-      @required List<AppRoute> initialRoutes,
-      this.onFinish})
-      : super(initialRoutes);
+  Widget _root;
+
+  NestedRouterDelegate({
+    @required Widget root,
+    @required this.builder,
+    this.onFinish,
+  })  : _root = root,
+        super(<AppRoute>[]);
 
   @override
   GlobalKey<NavigatorState> get navigatorKey => _navigatorKey;
@@ -199,7 +162,7 @@ class NestedRouterDelegate extends MyRouterDelegate {
             key: ValueKey('RootOfNestedNavigator'),
             name: 'RootOfNestedNavigator',
             routeFactory: (settings) => PageRouteBuilder(
-                settings: settings, pageBuilder: (_, __, ___) => root)),
+                settings: settings, pageBuilder: (_, __, ___) => _root)),
       ]..addAll(_stack.map<Page>((route) => MyPage(
           key: ValueKey(route.identifier),
           name: route.name,
@@ -220,6 +183,12 @@ class NestedRouterDelegate extends MyRouterDelegate {
       }
     }
     return route.didPop(result);
+  }
+
+  void reload(Widget newRoot) {
+    _root = newRoot;
+    _stack.clear();
+    notifyListeners();
   }
 
   void finish([dynamic result]) {
